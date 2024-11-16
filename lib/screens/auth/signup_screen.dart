@@ -1,14 +1,12 @@
-// lib/screens/auth/signup_screen.dart
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:video_player/video_player.dart';
 import '../../services/auth_service.dart';
-import '../home_screen.dart';
-import '../../utils/constants.dart'; // Ensure this exists
-import '../../utils/theme.dart'; // Ensure this exists
+import '../../utils/validators.dart';
+import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
+  static const routeName = '/signup';
   @override
   _SignupScreenState createState() => _SignupScreenState();
 }
@@ -17,143 +15,216 @@ class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
   String password = '';
+  String confirmPassword = '';
   bool isLoading = false;
-  String errorMessage = '';
+  late VideoPlayerController _videoController;
 
-  void _signUp(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        isLoading = true;
-        errorMessage = '';
+  @override
+  void initState() {
+    super.initState();
+    _videoController = VideoPlayerController.asset('assets/background.mp4')
+      ..initialize().then((_) {
+        _videoController.setLooping(true);
+        _videoController.setVolume(0.0);
+        _videoController.play();
+        setState(() {});
       });
-
-      try {
-        final authService = Provider.of<AuthService>(context, listen: false);
-        User? user = await authService.signUp(email, password);
-
-        if (user != null) {
-          // Navigate to HomeScreen upon successful sign up
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => HomeScreen()),
-          );
-        }
-      } on FirebaseAuthException catch (e) {
-        // Handle Firebase-specific errors
-        String message = '';
-        switch (e.code) {
-          case 'email-already-in-use':
-            message = 'The account already exists for that email.';
-            break;
-          case 'invalid-email':
-            message = 'The email address is badly formatted.';
-            break;
-          case 'weak-password':
-            message = 'The password provided is too weak.';
-            break;
-          default:
-            message = 'An undefined Error happened.';
-        }
-        setState(() {
-          errorMessage = message;
-        });
-      } catch (e) {
-        // Handle other errors
-        setState(() {
-          errorMessage = 'An error occurred. Please try again.';
-        });
-      } finally {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    }
   }
 
-  void _navigateToLogin(BuildContext context) {
-    Navigator.pop(context); // Assuming LoginScreen is the previous screen
+  @override
+  void dispose() {
+    _videoController.dispose();
+    super.dispose();
+  }
+
+  void _signup(BuildContext context) async {
+    if (_formKey.currentState!.validate()) {
+      if (password != confirmPassword) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Passwords do not match')),
+        );
+        return;
+      }
+
+      setState(() => isLoading = true);
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = await authService.signUp(email, password);
+      setState(() => isLoading = false);
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Signup failed. Please try again.')),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.signup), // Define AppStrings.signup
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    // Email Field
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null ||
-                            value.trim().isEmpty ||
-                            !value.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        setState(() {
-                          email = value;
-                        });
-                      },
+      body: Stack(
+        children: [
+          // Background Video
+          Positioned.fill(
+            child: _videoController.value.isInitialized
+                ? FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: _videoController.value.size.width,
+                      height: _videoController.value.size.height,
+                      child: VideoPlayer(_videoController),
                     ),
-                    SizedBox(height: 16.0),
-
-                    // Password Field
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
-                      ),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.trim().length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        setState(() {
-                          password = value;
-                        });
-                      },
-                    ),
-                    SizedBox(height: 16.0),
-
-                    // Error Message
-                    if (errorMessage.isNotEmpty)
-                      Text(
-                        errorMessage,
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    SizedBox(height: 16.0),
-
-                    // Sign Up Button
-                    ElevatedButton(
-                      onPressed: () => _signUp(context),
-                      child: Text('Sign Up'),
-                    ),
-
-                    // Navigate to Login
-                    TextButton(
-                      onPressed: () => _navigateToLogin(context),
-                      child: Text('Already have an account? Login'),
+                  )
+                : Center(child: CircularProgressIndicator()),
+          ),
+          // Dark Overlay for Better Contrast
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.5),
+            ),
+          ),
+          // Signup Section
+          Center(
+            child: SingleChildScrollView(
+              child: Container(
+                width: MediaQuery.of(context).size.width > 600
+                    ? 400
+                    : MediaQuery.of(context).size.width * 0.9,
+                padding: EdgeInsets.all(24.0),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(20.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 15.0,
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Title
+                      Text(
+                        'Sign Up',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 28.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 16.0),
+                      // Subtitle
+                      Text(
+                        'Create your account to get started',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16.0,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      SizedBox(height: 32.0),
+                      // Email Field
+                      TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        validator: emailValidator,
+                        onChanged: (value) => email = value.trim(),
+                      ),
+                      SizedBox(height: 16.0),
+                      // Password Field
+                      TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        obscureText: true,
+                        validator: passwordValidator,
+                        onChanged: (value) => password = value.trim(),
+                      ),
+                      SizedBox(height: 16.0),
+                      // Confirm Password Field
+                      TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          }
+                          return null;
+                        },
+                        onChanged: (value) => confirmPassword = value.trim(),
+                      ),
+                      SizedBox(height: 32.0),
+                      // Signup Button
+                      isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                              onPressed: () => _signup(context),
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white, backgroundColor: Colors.blueAccent,
+                                padding: EdgeInsets.symmetric(vertical: 16.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                              ),
+                              child: Text(
+                                'Sign Up',
+                                style: TextStyle(
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                      SizedBox(height: 16.0),
+                      // Login Link
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => LoginScreen()),
+                          );
+                        },
+                        child: Text(
+                          'Already have an account? Login',
+                          style: TextStyle(color: Colors.blueAccent),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
+            ),
+          ),
+        ],
       ),
     );
   }

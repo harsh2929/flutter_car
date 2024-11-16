@@ -10,6 +10,7 @@ import '../../models/car.dart';
 import '../../widgets/tag_input_field.dart';
 import 'package:image_picker/image_picker.dart';
 
+/// Screen for editing an existing car listing.
 class CarEditScreen extends StatefulWidget {
   final Car car;
 
@@ -27,6 +28,7 @@ class _CarEditScreenState extends State<CarEditScreen> {
   List<XFile> newImages = [];
   List<String> existingImageUrls = [];
   bool isLoading = false;
+  String errorMessage = '';
 
   @override
   void initState() {
@@ -37,16 +39,17 @@ class _CarEditScreenState extends State<CarEditScreen> {
     existingImageUrls = List<String>.from(widget.car.imageUrls);
   }
 
-  // Handles form submission
+  /// Handles form submission to update the car.
   void _updateCar(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         isLoading = true;
+        errorMessage = '';
       });
 
       try {
         final authService = Provider.of<AuthService>(context, listen: false);
-        final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+        final firestoreService = FirestoreService();
         final storageService = StorageService();
         final user = authService.currentUser;
 
@@ -63,6 +66,10 @@ class _CarEditScreenState extends State<CarEditScreen> {
         String userId = user.uid;
         String carId = widget.car.id;
 
+        // Generate updated search keywords
+        List<String> updatedSearchKeywords =
+            _generateSearchKeywords(title, tags);
+
         // Upload new images and get URLs
         List<String> updatedImageUrls = List<String>.from(existingImageUrls);
         for (int i = 0; i < newImages.length; i++) {
@@ -75,7 +82,7 @@ class _CarEditScreenState extends State<CarEditScreen> {
           updatedImageUrls.add(imageUrl);
         }
 
-        // Create updated Car object
+        // Create updated Car object with searchKeywords
         Car updatedCar = Car(
           id: carId,
           title: title,
@@ -83,6 +90,7 @@ class _CarEditScreenState extends State<CarEditScreen> {
           tags: tags,
           imageUrls: updatedImageUrls,
           ownerId: userId,
+          searchKeywords: updatedSearchKeywords,
         );
 
         // Update the car in Firestore
@@ -95,9 +103,9 @@ class _CarEditScreenState extends State<CarEditScreen> {
         Navigator.pop(context);
       } catch (e) {
         print('Error updating car: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update car. Please try again.')),
-        );
+        setState(() {
+          errorMessage = 'Failed to update car. Please try again.';
+        });
       } finally {
         setState(() {
           isLoading = false;
@@ -106,7 +114,7 @@ class _CarEditScreenState extends State<CarEditScreen> {
     }
   }
 
-  // Handles image picking
+  /// Handles image selection for adding new images.
   void _pickNewImages() async {
     final ImagePicker _picker = ImagePicker();
     try {
@@ -130,21 +138,21 @@ class _CarEditScreenState extends State<CarEditScreen> {
     }
   }
 
-  // Removes selected new image
+  /// Removes a newly selected image before submission.
   void _removeNewImage(int index) {
     setState(() {
       newImages.removeAt(index);
     });
   }
 
-  // Removes existing image
+  /// Removes an existing image from the car listing.
   void _removeExistingImage(int index) {
     setState(() {
       existingImageUrls.removeAt(index);
     });
   }
 
-  // Converts XFile to Uint8List for image preview on Web
+  /// Converts XFile to Uint8List for image preview.
   Future<Uint8List?> _getImageBytes(XFile image) async {
     try {
       return await image.readAsBytes();
@@ -152,6 +160,19 @@ class _CarEditScreenState extends State<CarEditScreen> {
       print('Error reading image bytes: $e');
       return null;
     }
+  }
+
+  /// Generates search keywords from title and tags for optimized searching.
+  List<String> _generateSearchKeywords(String title, List<String> tags) {
+    List<String> keywords = [];
+
+    // Split the title into words and add to keywords
+    keywords.addAll(title.toLowerCase().split(' '));
+
+    // Add tags to keywords
+    keywords.addAll(tags.map((tag) => tag.toLowerCase()));
+
+    return keywords;
   }
 
   @override
@@ -227,14 +248,16 @@ class _CarEditScreenState extends State<CarEditScreen> {
                       // Existing Images
                       Text(
                         'Existing Images',
-                        style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16.0, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 8.0),
                       existingImageUrls.isNotEmpty
                           ? Wrap(
                               spacing: 8.0,
                               runSpacing: 8.0,
-                              children: List.generate(existingImageUrls.length, (index) {
+                              children: List.generate(existingImageUrls.length,
+                                  (index) {
                                 return Stack(
                                   children: [
                                     Image.network(
@@ -242,12 +265,14 @@ class _CarEditScreenState extends State<CarEditScreen> {
                                       width: 100,
                                       height: 100,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
                                         return Container(
                                           width: 100,
                                           height: 100,
                                           color: Colors.grey[300],
-                                          child: Icon(Icons.broken_image, color: Colors.red),
+                                          child: Icon(Icons.broken_image,
+                                              color: Colors.red),
                                         );
                                       },
                                     ),
@@ -255,7 +280,8 @@ class _CarEditScreenState extends State<CarEditScreen> {
                                       right: 0,
                                       top: 0,
                                       child: GestureDetector(
-                                        onTap: () => _removeExistingImage(index),
+                                        onTap: () =>
+                                            _removeExistingImage(index),
                                         child: CircleAvatar(
                                           radius: 12,
                                           backgroundColor: Colors.black54,
@@ -277,7 +303,8 @@ class _CarEditScreenState extends State<CarEditScreen> {
                       // New Images
                       Text(
                         'Add New Images (Max 10)',
-                        style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16.0, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 8.0),
                       ElevatedButton.icon(
@@ -294,19 +321,24 @@ class _CarEditScreenState extends State<CarEditScreen> {
                                 return FutureBuilder<Uint8List?>(
                                   future: _getImageBytes(newImages[index]),
                                   builder: (context, snapshot) {
-                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
                                       return Container(
                                         width: 100,
                                         height: 100,
                                         color: Colors.grey[300],
-                                        child: Center(child: CircularProgressIndicator()),
+                                        child: Center(
+                                            child: CircularProgressIndicator()),
                                       );
-                                    } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                                    } else if (snapshot.hasError ||
+                                        !snapshot.hasData ||
+                                        snapshot.data == null) {
                                       return Container(
                                         width: 100,
                                         height: 100,
                                         color: Colors.grey[300],
-                                        child: Icon(Icons.broken_image, color: Colors.red),
+                                        child: Icon(Icons.broken_image,
+                                            color: Colors.red),
                                       );
                                     } else {
                                       return Stack(
@@ -321,7 +353,8 @@ class _CarEditScreenState extends State<CarEditScreen> {
                                             right: 0,
                                             top: 0,
                                             child: GestureDetector(
-                                              onTap: () => _removeNewImage(index),
+                                              onTap: () =>
+                                                  _removeNewImage(index),
                                               child: CircleAvatar(
                                                 radius: 12,
                                                 backgroundColor: Colors.black54,
@@ -348,7 +381,8 @@ class _CarEditScreenState extends State<CarEditScreen> {
                         child: ElevatedButton(
                           onPressed: () => _updateCar(context),
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 24.0, vertical: 12.0),
                             child: Text(
                               'Update Car',
                               style: TextStyle(fontSize: 16.0),
@@ -356,6 +390,16 @@ class _CarEditScreenState extends State<CarEditScreen> {
                           ),
                         ),
                       ),
+                      SizedBox(height: 16.0),
+
+                      // Display Error Message if Any
+                      if (errorMessage.isNotEmpty)
+                        Center(
+                          child: Text(
+                            errorMessage,
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
                     ],
                   ),
                 ),

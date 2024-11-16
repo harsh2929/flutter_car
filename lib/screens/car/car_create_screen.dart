@@ -10,6 +10,7 @@ import '../../models/car.dart';
 import '../../widgets/tag_input_field.dart';
 import 'package:image_picker/image_picker.dart';
 
+/// Screen for creating a new car listing.
 class CarCreateScreen extends StatefulWidget {
   @override
   _CarCreateScreenState createState() => _CarCreateScreenState();
@@ -24,7 +25,7 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
   bool isLoading = false;
   String errorMessage = '';
 
-  // Handles form submission
+  /// Handles form submission to create a new car.
   void _submitForm(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       if (images.isEmpty) {
@@ -41,7 +42,7 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
 
       try {
         final authService = Provider.of<AuthService>(context, listen: false);
-        final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+        final firestoreService = FirestoreService();
         final storageService = StorageService();
         final user = authService.currentUser;
 
@@ -58,7 +59,10 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
         String userId = user.uid;
         String carId = firestoreService.generateCarId();
 
-        // Upload images and get URLs
+        // Generate search keywords from title and tags
+        List<String> searchKeywords = _generateSearchKeywords(title, tags);
+
+        // Upload images and retrieve their URLs
         List<String> imageUrls = [];
         for (int i = 0; i < images.length; i++) {
           String imageUrl = await storageService.uploadImage(
@@ -68,7 +72,6 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
             i,
           );
 
-          // Check if the upload was successful
           if (imageUrl.isEmpty) {
             throw Exception('Image upload failed for image index $i');
           }
@@ -84,6 +87,7 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
           tags: tags,
           imageUrls: imageUrls,
           ownerId: userId,
+          searchKeywords: searchKeywords,
         );
 
         // Save the car to Firestore
@@ -107,7 +111,7 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
     }
   }
 
-  // Handles image picking
+  /// Handles image selection using ImagePicker.
   void _pickImages() async {
     final ImagePicker _picker = ImagePicker();
     try {
@@ -131,14 +135,14 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
     }
   }
 
-  // Removes selected image
+  /// Removes a selected image from the list.
   void _removeImage(int index) {
     setState(() {
       images.removeAt(index);
     });
   }
 
-  // Converts XFile to Uint8List for image preview on Web
+  /// Converts XFile to Uint8List for image preview.
   Future<Uint8List?> _getImageBytes(XFile image) async {
     try {
       return await image.readAsBytes();
@@ -146,6 +150,19 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
       print('Error reading image bytes: $e');
       return null;
     }
+  }
+
+  /// Generates search keywords from title and tags for optimized searching.
+  List<String> _generateSearchKeywords(String title, List<String> tags) {
+    List<String> keywords = [];
+
+    // Split the title into words and add to keywords
+    keywords.addAll(title.toLowerCase().split(' '));
+
+    // Add tags to keywords
+    keywords.addAll(tags.map((tag) => tag.toLowerCase()));
+
+    return keywords;
   }
 
   @override
@@ -218,8 +235,8 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
                       // Image Picker
                       Text(
                         'Images (Max 10)',
-                        style: TextStyle(
-                            fontSize: 16.0, fontWeight: FontWeight.bold),
+                        style:
+                            TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 8.0),
                       ElevatedButton.icon(

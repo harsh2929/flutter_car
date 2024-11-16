@@ -1,3 +1,5 @@
+// lib/widgets/custom_drawer.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
@@ -7,15 +9,14 @@ import '../utils/constants.dart';
 class CustomDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+    final authService = Provider.of<AuthService>(context, listen: false);
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
+          DrawerHeader(
             decoration: BoxDecoration(
-                color: AppColors.backgroundColor,
-
+              color: AppColors.primaryColor,
             ),
             child: Text(
               AppStrings.appName,
@@ -27,19 +28,21 @@ class CustomDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: Icon(Icons.person),
-            title: Text('Profile'),
+            title: Text(AppStrings.profile),
             onTap: () {
               Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => ProfileScreen()));
+                context,
+                MaterialPageRoute(builder: (_) => ProfileScreen()),
+              );
             },
           ),
-          ListTile(
-            leading: Icon(Icons.logout),
-            title: Text('Logout'),
-            onTap: () {
-              authService.logout();
-            },
-          ),
+          // ListTile(
+          //   leading: Icon(Icons.logout),
+          //   title: Text(AppStrings.logout),
+          //   onTap: () {
+          //     authService.logout();
+          //   },
+          // ),
         ],
       ),
     );

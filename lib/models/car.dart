@@ -5,6 +5,7 @@ class Car {
   List<String> tags;
   List<String> imageUrls;
   String ownerId;
+  List<String> searchKeywords; // New field for search optimization
 
   Car({
     required this.id,
@@ -13,6 +14,7 @@ class Car {
     required this.tags,
     required this.imageUrls,
     required this.ownerId,
+    required this.searchKeywords,
   });
 
   // Convert Car object to Firestore document
@@ -23,6 +25,7 @@ class Car {
       'tags': tags,
       'imageUrls': imageUrls,
       'ownerId': ownerId,
+      'searchKeywords': searchKeywords,
     };
   }
 
@@ -35,6 +38,7 @@ class Car {
       tags: List<String>.from(data['tags'] ?? []),
       imageUrls: List<String>.from(data['imageUrls'] ?? []),
       ownerId: data['ownerId'] ?? '',
+      searchKeywords: List<String>.from(data['searchKeywords'] ?? []),
     );
   }
 }
