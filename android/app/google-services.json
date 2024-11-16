@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "561388224593",
+    "project_id": "aienergon",
+    "storage_bucket": "aienergon.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:561388224593:android:82508cecfae9c30fc9b870",
+        "android_client_info": {
+          "package_name": "com.ah.ap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6PjPKLO2yiM2K4PoP1c7eev6ITt9dvGc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
