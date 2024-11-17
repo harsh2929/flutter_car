@@ -1,7 +1,6 @@
 # 🚗 Car Management App
 
-An elegant **Flutter web application** for managing cars, designed for a seamless and modern user experience. The app allows users to log in, sign up, and manage cars with up to 10 images per car. Each car entry includes a title, description, and tags like `car_type`, `company`, and `dealer`. Built with Flutter and Firebase, this app is feature-rich and user-friendly.
-
+An elegant **Flutter web application** for managing cars.
 ---
 
 ## 🌟 Features
