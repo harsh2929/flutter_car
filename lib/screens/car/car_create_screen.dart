@@ -1,5 +1,3 @@
-// lib/screens/car/car_create_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:typed_data';
@@ -24,23 +22,14 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
   bool isLoading = false;
   String errorMessage = '';
 
-  /// Generates search keywords from title, tags, and description for optimized searching.
   List<String> _generateSearchKeywords(String title, List<String> tags, String description) {
     List<String> keywords = [];
-
-    // Split the title into words and add to keywords
     keywords.addAll(title.toLowerCase().split(' '));
-
-    // Add tags to keywords
     keywords.addAll(tags.map((tag) => tag.toLowerCase()));
-
-    // Split the description into words and add to keywords
     keywords.addAll(description.toLowerCase().split(' '));
-
     return keywords;
   }
 
-  /// Handles form submission to create a new car.
   void _submitForm(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       if (images.isEmpty) {
@@ -74,10 +63,8 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
         String userId = user.uid;
         String carId = firestoreService.generateCarId();
 
-        // Generate search keywords from title, tags, and description
         List<String> searchKeywords = _generateSearchKeywords(title, tags, description);
 
-        // Upload images and retrieve their URLs
         List<String> imageUrls = [];
         for (int i = 0; i < images.length; i++) {
           String imageUrl = await storageService.uploadImage(
@@ -94,7 +81,6 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
           imageUrls.add(imageUrl);
         }
 
-        // Create a new Car object
         Car newCar = Car(
           id: carId,
           title: title,
@@ -105,7 +91,6 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
           searchKeywords: searchKeywords,
         );
 
-        // Save the car to Firestore
         await firestoreService.addCar(newCar);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -149,14 +134,12 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
     }
   }
 
-  /// Removes a selected image from the list.
   void _removeImage(int index) {
     setState(() {
       images.removeAt(index);
     });
   }
 
-  /// Converts XFile to Uint8List for image preview.
   Future<Uint8List?> _getImageBytes(XFile image) async {
     try {
       return await image.readAsBytes();
@@ -171,12 +154,21 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Add New Car'),
+        elevation: 0,
+        backgroundColor: Colors.blueAccent,
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
+          : SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blueAccent.shade100, Colors.blueAccent.shade400],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -186,7 +178,11 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
                       TextFormField(
                         decoration: InputDecoration(
                           labelText: 'Title',
-                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -206,7 +202,11 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
                       TextFormField(
                         decoration: InputDecoration(
                           labelText: 'Description',
-                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
                         ),
                         maxLines: 4,
                         validator: (value) {
@@ -236,8 +236,7 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
                       // Image Picker
                       Text(
                         'Images (Max 10)',
-                        style:
-                            TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 8.0),
                       ElevatedButton.icon(
@@ -245,7 +244,7 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
                         icon: Icon(Icons.add_a_photo),
                         label: Text('Select Images'),
                       ),
-                      SizedBox(height: 8.0),
+                      SizedBox(height: 16.0),
 
                       // Display Selected Images
                       images.isNotEmpty
@@ -256,14 +255,12 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
                                 return FutureBuilder<Uint8List?>(
                                   future: _getImageBytes(images[index]),
                                   builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
+                                    if (snapshot.connectionState == ConnectionState.waiting) {
                                       return Container(
                                         width: 100,
                                         height: 100,
                                         color: Colors.grey[300],
-                                        child:
-                                            Center(child: CircularProgressIndicator()),
+                                        child: Center(child: CircularProgressIndicator()),
                                       );
                                     } else if (snapshot.hasError ||
                                         !snapshot.hasData ||
@@ -272,17 +269,19 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
                                         width: 100,
                                         height: 100,
                                         color: Colors.grey[300],
-                                        child: Icon(Icons.broken_image,
-                                            color: Colors.red),
+                                        child: Icon(Icons.broken_image, color: Colors.red),
                                       );
                                     } else {
                                       return Stack(
                                         children: [
-                                          Image.memory(
-                                            snapshot.data!,
-                                            width: 100,
-                                            height: 100,
-                                            fit: BoxFit.cover,
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(10.0),
+                                            child: Image.memory(
+                                              snapshot.data!,
+                                              width: 100,
+                                              height: 100,
+                                              fit: BoxFit.cover,
+                                            ),
                                           ),
                                           Positioned(
                                             right: 0,
@@ -307,31 +306,35 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
                                 );
                               }),
                             )
-                          : Text('No images selected.'),
+                          : Text(
+                              'No images selected.',
+                              style: TextStyle(color: Colors.white),
+                            ),
                       SizedBox(height: 24.0),
 
                       // Submit Button
                       Center(
                         child: ElevatedButton(
                           onPressed: () => _submitForm(context),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 24.0, vertical: 12.0),
-                            child: Text(
-                              'Add Car',
-                              style: TextStyle(fontSize: 16.0),
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
                             ),
+                          ),
+                          child: Text(
+                            'Add Car',
+                            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
-                      SizedBox(height: 16.0),
 
-                      // Display Error Message if Any
+                      // Error Message
                       if (errorMessage.isNotEmpty)
                         Center(
                           child: Text(
                             errorMessage,
-                            style: TextStyle(color: Colors.red),
+                            style: TextStyle(color: Colors.red, fontSize: 14),
                           ),
                         ),
                     ],
