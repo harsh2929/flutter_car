@@ -83,13 +83,11 @@ Navigator.pushReplacementNamed(context, '/home');
                   )
                 : Center(child: CircularProgressIndicator()),
           ),
-          // Dark Overlay for Better Contrast
           Positioned.fill(
             child: Container(
               color: Colors.black.withOpacity(0.5),
             ),
           ),
-          // Login Section
           Center(
             child: SingleChildScrollView(
               child: Container(

@@ -14,22 +14,18 @@ class UserProvider with ChangeNotifier {
   UserModel? get user => _user;
 
   UserProvider() {
-    // Listen to authentication state changes.
     _auth.authStateChanges().listen(_onAuthStateChanged);
   }
 
-  /// Handler for authentication state changes.
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
     if (firebaseUser == null) {
       _user = null;
     } else {
-      // Fetch user data from Firestore.
       _user = await _firestoreService.getUserData(firebaseUser.uid);
     }
     notifyListeners();
   }
 
-  /// Refreshes the user data manually.
   Future<void> refreshUser() async {
     User? firebaseUser = _auth.currentUser;
     if (firebaseUser != null) {

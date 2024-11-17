@@ -1,5 +1,4 @@
-// lib/screens/car/car_edit_screen.dart
-
+ 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:typed_data';
@@ -10,8 +9,7 @@ import '../../models/car.dart';
 import '../../widgets/tag_input_field.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// Screen for editing an existing car listing.
-class CarEditScreen extends StatefulWidget {
+ class CarEditScreen extends StatefulWidget {
   final Car car;
 
   CarEditScreen({required this.car});

@@ -1,4 +1,4 @@
-// lib/models/user.dart
+ 
 
 class UserModel {
   final String id;
@@ -13,8 +13,7 @@ class UserModel {
     this.photoUrl,
   });
 
-  /// Converts Firestore document data to a UserModel object.
-  factory UserModel.fromMap(String id, Map<String, dynamic> data) {
+   factory UserModel.fromMap(String id, Map<String, dynamic> data) {
     return UserModel(
       id: id,
       displayName: data['displayName'] ?? '',
@@ -23,8 +22,7 @@ class UserModel {
     );
   }
 
-  /// Converts UserModel object to a map for Firestore.
-  Map<String, dynamic> toMap() {
+   Map<String, dynamic> toMap() {
     return {
       'displayName': displayName,
       'email': email,

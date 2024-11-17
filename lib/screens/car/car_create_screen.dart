@@ -1,5 +1,4 @@
-// lib/screens/car/car_create_screen.dart
-
+ 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:typed_data';
@@ -10,8 +9,7 @@ import '../../models/car.dart';
 import '../../widgets/tag_input_field.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// Screen for creating a new car listing.
-class CarCreateScreen extends StatefulWidget {
+ class CarCreateScreen extends StatefulWidget {
   @override
   _CarCreateScreenState createState() => _CarCreateScreenState();
 }
@@ -111,8 +109,7 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
     }
   }
 
-  /// Handles image selection using ImagePicker.
-  void _pickImages() async {
+   void _pickImages() async {
     final ImagePicker _picker = ImagePicker();
     try {
       final List<XFile>? pickedFiles = await _picker.pickMultiImage();

@@ -5,8 +5,7 @@ import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import 'car_edit_screen.dart';
 
-/// Screen for viewing detailed information about a car.
-class CarDetailScreen extends StatelessWidget {
+ class CarDetailScreen extends StatelessWidget {
   final Car car;
 
   CarDetailScreen({required this.car});
@@ -44,8 +43,7 @@ class CarDetailScreen extends StatelessWidget {
     }
   }
 
-  /// Navigates to the Car Edit Screen.
-  void _editCar(BuildContext context) {
+   void _editCar(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => CarEditScreen(car: car)),
