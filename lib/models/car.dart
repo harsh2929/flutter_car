@@ -1,3 +1,5 @@
+// lib/models/car.dart
+
 class Car {
   String id;
   String title;
@@ -17,7 +19,7 @@ class Car {
     required this.searchKeywords,
   });
 
-   Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap() {
     return {
       'title': title,
       'description': description,
@@ -28,7 +30,7 @@ class Car {
     };
   }
 
-   factory Car.fromMap(String id, Map<String, dynamic> data) {
+  factory Car.fromMap(String id, Map<String, dynamic> data) {
     return Car(
       id: id,
       title: data['title'] ?? '',

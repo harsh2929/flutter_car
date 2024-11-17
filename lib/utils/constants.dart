@@ -1,19 +1,17 @@
+// lib/utils/constants.dart
+
 import 'package:flutter/material.dart';
+
 class AppStrings {
   static const String appName = 'Car Management App';
   static const String profile = 'Profile';
   static const String logout = 'Logout';
   static const String errorNoUser = 'No user information available.';
   static const String addCar = 'Add New Car';
-
   static const String login = 'Login';
   static const String signup = 'Sign Up';
   static const String home = 'Home';
- }
-
-
-
-
+}
 
 class AppColors {
   static const Color primaryColor = Colors.indigo;

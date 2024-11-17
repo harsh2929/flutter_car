@@ -1,3 +1,5 @@
+// lib/screens/car/car_detail_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/car.dart';
@@ -5,7 +7,7 @@ import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import 'car_edit_screen.dart';
 
- class CarDetailScreen extends StatelessWidget {
+class CarDetailScreen extends StatelessWidget {
   final Car car;
 
   CarDetailScreen({required this.car});
@@ -43,7 +45,7 @@ import 'car_edit_screen.dart';
     }
   }
 
-   void _editCar(BuildContext context) {
+  void _editCar(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => CarEditScreen(car: car)),

@@ -1,4 +1,5 @@
- 
+// lib/screens/car/car_create_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:typed_data';
@@ -9,7 +10,7 @@ import '../../models/car.dart';
 import '../../widgets/tag_input_field.dart';
 import 'package:image_picker/image_picker.dart';
 
- class CarCreateScreen extends StatefulWidget {
+class CarCreateScreen extends StatefulWidget {
   @override
   _CarCreateScreenState createState() => _CarCreateScreenState();
 }
@@ -22,6 +23,22 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
   List<XFile> images = [];
   bool isLoading = false;
   String errorMessage = '';
+
+  /// Generates search keywords from title, tags, and description for optimized searching.
+  List<String> _generateSearchKeywords(String title, List<String> tags, String description) {
+    List<String> keywords = [];
+
+    // Split the title into words and add to keywords
+    keywords.addAll(title.toLowerCase().split(' '));
+
+    // Add tags to keywords
+    keywords.addAll(tags.map((tag) => tag.toLowerCase()));
+
+    // Split the description into words and add to keywords
+    keywords.addAll(description.toLowerCase().split(' '));
+
+    return keywords;
+  }
 
   /// Handles form submission to create a new car.
   void _submitForm(BuildContext context) async {
@@ -57,8 +74,8 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
         String userId = user.uid;
         String carId = firestoreService.generateCarId();
 
-        // Generate search keywords from title and tags
-        List<String> searchKeywords = _generateSearchKeywords(title, tags);
+        // Generate search keywords from title, tags, and description
+        List<String> searchKeywords = _generateSearchKeywords(title, tags, description);
 
         // Upload images and retrieve their URLs
         List<String> imageUrls = [];
@@ -109,7 +126,7 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
     }
   }
 
-   void _pickImages() async {
+  void _pickImages() async {
     final ImagePicker _picker = ImagePicker();
     try {
       final List<XFile>? pickedFiles = await _picker.pickMultiImage();
@@ -147,19 +164,6 @@ class _CarCreateScreenState extends State<CarCreateScreen> {
       print('Error reading image bytes: $e');
       return null;
     }
-  }
-
-  /// Generates search keywords from title and tags for optimized searching.
-  List<String> _generateSearchKeywords(String title, List<String> tags) {
-    List<String> keywords = [];
-
-    // Split the title into words and add to keywords
-    keywords.addAll(title.toLowerCase().split(' '));
-
-    // Add tags to keywords
-    keywords.addAll(tags.map((tag) => tag.toLowerCase()));
-
-    return keywords;
   }
 
   @override

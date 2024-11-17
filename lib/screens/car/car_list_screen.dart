@@ -1,3 +1,5 @@
+// lib/screens/car/car_list_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/firestore_service.dart';
@@ -6,6 +8,7 @@ import '../../models/car.dart';
 import '../../widgets/car_card.dart';
 import '../car/car_create_screen.dart';
 import '../../utils/constants.dart';
+import 'dart:async'; // Import for Timer
 
 class CarListScreen extends StatefulWidget {
   @override
@@ -16,6 +19,7 @@ class _CarListScreenState extends State<CarListScreen> with SingleTickerProvider
   late TabController _tabController;
   String globalSearchQuery = ''; // Search query for All Cars
   String myCarsSearchQuery = ''; // Search query for My Cars
+  Timer? _debounce; // Timer for debouncing
 
   @override
   void initState() {
@@ -26,6 +30,7 @@ class _CarListScreenState extends State<CarListScreen> with SingleTickerProvider
   @override
   void dispose() {
     _tabController.dispose();
+    _debounce?.cancel(); // Cancel the timer if active
     super.dispose();
   }
 
@@ -45,7 +50,7 @@ class _CarListScreenState extends State<CarListScreen> with SingleTickerProvider
   Widget _buildMyCarsTab(FirestoreService firestoreService, String userId) {
     return Column(
       children: [
-        // Search Bar for My Cars
+        // Search Bar for My Cars with Debouncing
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
@@ -55,8 +60,11 @@ class _CarListScreenState extends State<CarListScreen> with SingleTickerProvider
               border: OutlineInputBorder(),
             ),
             onChanged: (value) {
-              setState(() {
-                myCarsSearchQuery = value.trim().toLowerCase();
+              if (_debounce?.isActive ?? false) _debounce!.cancel();
+              _debounce = Timer(const Duration(milliseconds: 500), () {
+                setState(() {
+                  myCarsSearchQuery = value.trim().toLowerCase();
+                });
               });
             },
           ),
@@ -64,7 +72,9 @@ class _CarListScreenState extends State<CarListScreen> with SingleTickerProvider
         // My Cars List
         Expanded(
           child: StreamBuilder<List<Car>>(
-            stream: firestoreService.getUserCars(userId),
+            stream: myCarsSearchQuery.isEmpty
+                ? firestoreService.getUserCars(userId)
+                : firestoreService.searchUserCars(userId, myCarsSearchQuery),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
@@ -77,17 +87,10 @@ class _CarListScreenState extends State<CarListScreen> with SingleTickerProvider
               } else {
                 final cars = snapshot.data!;
 
-                // Filter cars based on the search query
-                final filteredCars = myCarsSearchQuery.isEmpty
-                    ? cars
-                    : cars.where((car) {
-                        return car.title.toLowerCase().contains(myCarsSearchQuery);
-                      }).toList();
-
                 return ListView.builder(
-                  itemCount: filteredCars.length,
+                  itemCount: cars.length,
                   itemBuilder: (context, index) {
-                    return CarCard(car: filteredCars[index]);
+                    return CarCard(car: cars[index]);
                   },
                 );
               }
@@ -101,7 +104,7 @@ class _CarListScreenState extends State<CarListScreen> with SingleTickerProvider
   Widget _buildAllCarsTab(FirestoreService firestoreService, String currentUserId) {
     return Column(
       children: [
-        // Global Search Bar
+        // Global Search Bar with Debouncing
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
@@ -111,8 +114,11 @@ class _CarListScreenState extends State<CarListScreen> with SingleTickerProvider
               border: OutlineInputBorder(),
             ),
             onChanged: (value) {
-              setState(() {
-                globalSearchQuery = value.trim().toLowerCase();
+              if (_debounce?.isActive ?? false) _debounce!.cancel();
+              _debounce = Timer(const Duration(milliseconds: 500), () {
+                setState(() {
+                  globalSearchQuery = value.trim().toLowerCase();
+                });
               });
             },
           ),

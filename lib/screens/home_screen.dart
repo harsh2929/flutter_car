@@ -11,6 +11,7 @@ class HomeScreen extends StatelessWidget {
     final authService = Provider.of<AuthService>(context, listen: false);
     try {
       await authService.logout();
+      Navigator.pushReplacementNamed(context, '/login'); // Ensure named route exists
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to logout. Please try again.')),
@@ -25,16 +26,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(AppStrings.home), // Define AppStrings.home
-      //   actions: [
-          // IconButton(
-          //   icon: Icon(Icons.logout),
-          //   onPressed: () => _logout(context),
-          //   tooltip: 'Logout',
-          // ),
-      //   ],
-      // ),
       body: CarListScreen(), // Ensure CarListScreen is correctly implemented
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToAddCar(context), // Navigate using the named route

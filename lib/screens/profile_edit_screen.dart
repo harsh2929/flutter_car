@@ -46,8 +46,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       String? photoUrl = user.photoUrl;
 
       if (_imageFile != null) {
+        // Convert File to XFile for uploadImage method
+        XFile xfile = XFile(_imageFile!.path);
         photoUrl = await storageService.uploadImage(
-            _imageFile! as XFile, user.id, 'profile_photo', 0);
+            xfile, user.id, 'profile_photo', 0);
       }
 
       // Update Firestore user document

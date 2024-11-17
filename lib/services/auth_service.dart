@@ -42,7 +42,7 @@ class AuthService {
   }
 
   // Logout method
-Future<void> logout() async {
+  Future<void> logout() async {
     try {
       await _auth.signOut();
     } catch (e) {
